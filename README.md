@@ -151,6 +151,91 @@ docker compose up -d --build
 http://<你的主机>:8080
 ```
 
+### 从 Docker Hub 拉取镜像部署
+
+推荐：
+
+- 普通部署优先使用 Docker Compose
+- 只想快速试跑时再使用 `docker run`
+
+部署前请先替换以下占位内容：
+
+- `/host/path/root1`、`/host/path/root2` 改成你的宿主机实际目录
+- `18001:8080` 改成你想暴露的端口
+- 如果你通过 HTTPS 反代访问，把 `SESSION_COOKIE_SECURE` 改成 `true`
+
+直接拉取镜像：
+
+```bash
+docker pull 1ror1/file-anaer:latest
+```
+
+使用 `docker run` 启动：
+
+```bash
+docker run -d \
+  --name file-anaer \
+  -p 18001:8080 \
+  -e SCAN_ROOTS=/data/root1,/data/root2 \
+  -e HOST_PATH_MAPS=/data/root1=/host/path/root1,/data/root2=/host/path/root2 \
+  -e CMD_TIMEOUT=2m \
+  -e MAX_RESULTS=500000 \
+  -e AUTH_STATE_FILE=/app/data/auth.json \
+  -e SESSION_COOKIE_SECURE=false \
+  -e SESSION_LIFETIME=24h \
+  -e SESSION_IDLE_TIMEOUT=8h \
+  -v /host/path/root1:/data/root1 \
+  -v /host/path/root2:/data/root2 \
+  -v file-anaer-state:/app/data \
+  --memory=4g \
+  1ror1/file-anaer:latest
+```
+
+使用 Docker Compose：
+
+```yaml
+services:
+  file-anaer:
+    image: 1ror1/file-anaer:latest
+    mem_limit: 4g
+    ports:
+      - "18001:8080"
+    environment:
+      SCAN_ROOTS: /data/root1,/data/root2
+      HOST_PATH_MAPS: /data/root1=/host/path/root1,/data/root2=/host/path/root2
+      CMD_TIMEOUT: 2m
+      MAX_RESULTS: 500000
+      AUTH_STATE_FILE: /app/data/auth.json
+      SESSION_COOKIE_SECURE: false
+      SESSION_LIFETIME: 24h
+      SESSION_IDLE_TIMEOUT: 8h
+    volumes:
+      - /host/path/root1:/data/root1
+      - /host/path/root2:/data/root2
+      - file-anaer-state:/app/data
+
+volumes:
+  file-anaer-state:
+```
+
+保存后启动：
+
+```bash
+docker compose up -d
+```
+
+关键参数说明：
+
+- `SCAN_ROOTS`：容器内允许扫描的根目录，多个目录用逗号分隔
+- `HOST_PATH_MAPS`：把容器路径映射回宿主机路径，便于复制路径等操作
+- `/app/data`：保存认证、设置、历史记录等持久化数据
+- `--memory=4g` / `mem_limit: 4g`：限制容器最大内存，避免分析大目录时无限占用
+
+首次启动后：
+
+- 浏览器打开 `http://<你的主机>:18001`
+- 如果未预设管理员账号，会先进入初始化页面
+
 ### 直接运行镜像
 
 ```bash
@@ -285,8 +370,6 @@ http://你的主机:8080
 ```env
 SESSION_COOKIE_SECURE=true
 ```
-
-README 不再内置长篇反代模板；如果你使用 Nginx、Caddy 或其他代理，按各自标准反代到容器即可。
 
 ## 开发与构建
 
