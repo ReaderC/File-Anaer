@@ -1,0 +1,39 @@
+services:
+  file-anaer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # 文件量过大或者同时跑多个服务会占用大量内存，根据实际情况调整内存限制，避免容器内存占用过大导致宿主机性能问题。
+    mem_limit: 4g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "8080:8080"
+    environment:
+      # 容器内的扫描根目录，多个目录用逗号分隔。
+      SCAN_ROOTS: /data/work,/data/archive
+      # 复制路径时，将容器路径映射回宿主机路径，多个映射用逗号分隔。
+      HOST_PATH_MAPS: /data/work=/srv/file-anaer/work,/data/archive=/srv/file-anaer/archive
+      CMD_TIMEOUT: 2m
+      #前端搜索功能的最大结果数，避免一次返回大量结果导致性能问题，可根据实际需求调整。
+      MAX_RESULTS: 500000
+      # 认证与设置状态文件保存到 /app/data，对应下面的命名卷。
+      AUTH_STATE_FILE: /app/data/auth.json
+      SETTINGS_STATE_FILE: /app/data/settings.json
+      HISTORY_STATE_FILE: /app/data/history.json
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-24h}
+      SESSION_IDLE_TIMEOUT: ${SESSION_IDLE_TIMEOUT:-8h}
+    volumes:
+      # 业务数据挂载目录。
+      - /srv/file-anaer/work:/data/work
+      - /srv/file-anaer/archive:/data/archive
+      # 应用状态卷：保存认证配置和其他运行时持久化数据。
+      - file-anaer-state:/app/data
+
+volumes:
+  # 用于持久化应用状态的命名卷。
+  file-anaer-state:
