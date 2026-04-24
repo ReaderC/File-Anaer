@@ -552,6 +552,7 @@ func (h Handler) handleDuplicateActions(w http.ResponseWriter, r *http.Request) 
 		writeError(w, http.StatusBadRequest, "scan root is required")
 		return
 	}
+	h.normalizeDuplicateActionPaths(&req)
 
 	targetRoot, _, err := h.resolve(req.Root, req.Root)
 	if err != nil {
@@ -582,6 +583,7 @@ func (h Handler) handleDuplicateUndoRename(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusBadRequest, "scan root is required")
 		return
 	}
+	h.normalizeDuplicateUndoRenamePaths(&req)
 
 	targetRoot, _, err := h.resolve(req.Root, req.Root)
 	if err != nil {
@@ -1308,6 +1310,36 @@ func (h Handler) normalizeIgnorePaths(ignores []string) []string {
 	}
 
 	return normalized
+}
+
+func (h Handler) normalizeDuplicateActionPaths(req *domain.DuplicateActionRequest) {
+	if req == nil {
+		return
+	}
+	req.Root = h.toContainerPath(req.Root)
+	for index := range req.Groups {
+		req.Groups[index].KeepPath = h.toContainerPath(req.Groups[index].KeepPath)
+		selected := make([]string, 0, len(req.Groups[index].SelectedPaths))
+		for _, item := range req.Groups[index].SelectedPaths {
+			normalized := h.toContainerPath(item)
+			if strings.TrimSpace(normalized) == "" {
+				continue
+			}
+			selected = append(selected, normalized)
+		}
+		req.Groups[index].SelectedPaths = selected
+	}
+}
+
+func (h Handler) normalizeDuplicateUndoRenamePaths(req *domain.DuplicateUndoRenameRequest) {
+	if req == nil {
+		return
+	}
+	req.Root = h.toContainerPath(req.Root)
+	for index := range req.RenamedFiles {
+		req.RenamedFiles[index].OldPath = h.toContainerPath(req.RenamedFiles[index].OldPath)
+		req.RenamedFiles[index].NewPath = h.toContainerPath(req.RenamedFiles[index].NewPath)
+	}
 }
 
 func (h Handler) applyHostPaths(result *domain.AnalyzeResponse) {

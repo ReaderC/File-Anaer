@@ -129,19 +129,11 @@ Docker 镜像内也会一并包含这些文件，路径为 `/app/licenses/`。
 
 ### Docker Compose
 
-推荐：大多数用户优先使用 Docker Compose，配置更直观，也更方便后续维护。
-
 先复制环境变量模板：
 
 ```bash
 cp .env.example .env
 ```
-
-你通常只需要先确认这 3 件事：
-
-- 把挂载路径改成你自己的实际目录
-- 如果端口 `8080` 已被占用，就改成别的端口
-- 如果你放在 HTTPS 反向代理后面，把 `SESSION_COOKIE_SECURE` 改成 `true`
 
 按你的实际目录修改 `.env` 和 `docker-compose.yml` 中的挂载路径，然后启动：
 
@@ -154,120 +146,6 @@ docker compose up -d --build
 ```text
 http://<你的主机>:8080
 ```
-
-### 从 Docker Hub 拉取镜像部署
-
-仓库地址：
-
-```text
-https://hub.docker.com/r/1ror1/file-anaer
-```
-
-先拉取镜像：
-
-```bash
-docker pull 1ror1/file-anaer:latest
-```
-
-如果你不想自己构建镜像，可以直接使用 Docker Hub 上已经构建好的镜像。
-
-推荐顺序：
-
-- 日常部署优先使用 Docker Compose
-- 只想快速试跑或临时测试时，再使用 `docker run`
-
-部署前请先按你的环境替换下面这些占位符：
-
-- `/host/path/root1`、`/host/path/root2`：宿主机上的实际目录
-- `/data/root1`、`/data/root2`：容器内对应的挂载目录
-- `8080`：你想暴露的访问端口
-
-#### Docker
-
-```bash
-docker run -d \
-  --name file-anaer \
-  -p 8080:8080 \
-  -e SCAN_ROOTS=/data/root1,/data/root2 \
-  -e HOST_PATH_MAPS=/data/root1=/host/path/root1,/data/root2=/host/path/root2 \
-  -e CMD_TIMEOUT=2m \
-  -e MAX_RESULTS=500000 \
-  -e AUTH_STATE_FILE=/app/data/auth.json \
-  -e SESSION_COOKIE_SECURE=false \
-  -e SESSION_LIFETIME=24h \
-  -e SESSION_IDLE_TIMEOUT=8h \
-  -v /host/path/root1:/data/root1 \
-  -v /host/path/root2:/data/root2 \
-  -v file-anaer-state:/app/data \
-  --memory=4g \
-  1ror1/file-anaer:latest
-```
-
-启动后访问：
-
-```text
-http://<你的主机>:8080
-```
-
-#### Docker Compose
-
-```yaml
-services:
-  file-anaer:
-    image: 1ror1/file-anaer:latest
-    mem_limit: 4g
-    ports:
-      - "8080:8080"
-    environment:
-      SCAN_ROOTS: /data/root1,/data/root2
-      HOST_PATH_MAPS: /data/root1=/host/path/root1,/data/root2=/host/path/root2
-      CMD_TIMEOUT: 2m
-      MAX_RESULTS: 500000
-      AUTH_STATE_FILE: /app/data/auth.json
-      SESSION_COOKIE_SECURE: false
-      SESSION_LIFETIME: 24h
-      SESSION_IDLE_TIMEOUT: 8h
-    volumes:
-      - /host/path/root1:/data/root1
-      - /host/path/root2:/data/root2
-      - file-anaer-state:/app/data
-
-volumes:
-  file-anaer-state:
-```
-
-保存为 `docker-compose.yml` 后启动：
-
-```bash
-docker compose up -d
-```
-
-启动成功后，你通常会看到：
-
-- 浏览器可以打开 `http://<你的主机>:8080`
-- 如果还没有预设管理员账号，会先进入管理员初始化页面
-- 初始化完成后即可进入主界面
-
-#### 关键变量说明
-
-- `SCAN_ROOTS`
-  容器内允许扫描的根目录，多个目录用逗号分隔。
-- `HOST_PATH_MAPS`
-  容器路径到宿主机路径的映射，用于复制路径时优先返回宿主机路径。
-- `CMD_TIMEOUT`
-  后端调用外部工具的超时时间。
-- `MAX_RESULTS`
-  服务端搜索结果上限，默认 `500000`。
-- `AUTH_STATE_FILE`
-  认证状态文件路径，默认 `/app/data/auth.json`。
-- `SESSION_COOKIE_SECURE`
-  是否仅在 HTTPS 下发送会话 Cookie。
-- `SESSION_LIFETIME`
-  会话绝对生命周期。
-- `SESSION_IDLE_TIMEOUT`
-  会话空闲超时。
-
-说明：如果没有手动设置 `AUTH_USERNAME` 和 `AUTH_PASSWORD_HASH`，部署后首次进入 Web 会先弹出管理员用户名和密码初始化页面。
 
 ### 直接运行镜像
 
@@ -336,7 +214,7 @@ docker buildx build \
 
 ## 环境变量
 
-完整环境变量说明如下：
+关键环境变量如下：
 
 - `SCAN_ROOTS`
   容器内允许扫描的根目录，多个目录用逗号分隔。
@@ -404,6 +282,7 @@ http://你的主机:8080
 SESSION_COOKIE_SECURE=true
 ```
 
+README 不再内置长篇反代模板；如果你使用 Nginx、Caddy 或其他代理，按各自标准反代到容器即可。
 
 ## 开发与构建
 

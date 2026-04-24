@@ -195,6 +195,43 @@ func TestExecuteRenameReturnsNoChangesErrorWhenNamesAlreadyMatch(t *testing.T) {
 	}
 }
 
+func TestExecuteRenameDryRunDoesNotRenameFiles(t *testing.T) {
+	tmpDir := t.TempDir()
+	keep := filepath.Join(tmpDir, "39 (2).cc")
+	copyPath := filepath.Join(tmpDir, "39.cc")
+	for _, path := range []string{keep, copyPath} {
+		if err := os.WriteFile(path, []byte("duplicate"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	svc := Service{}
+	result, err := svc.executeRename(domain.DuplicateActionRequest{
+		Mode:        domain.DuplicateActionRename,
+		Root:        tmpDir,
+		DryRun:      true,
+		RenameMode:  domain.DuplicateRenameModeKeeper,
+		RenameScope: domain.DuplicateRenameScopeCopies,
+		Groups: []domain.DuplicateActionGroup{{
+			Hash:          "preview",
+			KeepPath:      keep,
+			SelectedPaths: []string{copyPath},
+		}},
+	}, tmpDir)
+	if err != nil {
+		t.Fatalf("executeRename dry run returned error: %v", err)
+	}
+	if result == nil || result.FileCount != 1 {
+		t.Fatalf("expected one previewed rename, got %#v", result)
+	}
+	if _, err := os.Stat(copyPath); err != nil {
+		t.Fatalf("expected original file to remain after dry run, stat error: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(tmpDir, "39 (3).cc")); err == nil {
+		t.Fatal("expected dry run to avoid creating renamed target")
+	}
+}
+
 func TestFilterDuplicateGroupsFoldersNestedDirectories(t *testing.T) {
 	parent := filepath.Clean("/data/dev/B")
 	child := filepath.Join(parent, "A")

@@ -91,7 +91,7 @@ function DuplicateBulkActionBar({
           <div className="duplicates-bulk-actions duplicates-bulk-actions-primary">
             {duplicateActions.map((action) => (
               <button key={action.key} type="button" className={`duplicates-bulk-button ${actionLoading === action.key ? "is-active" : ""}`} onClick={() => requestDuplicateAction(action.key)} disabled={Boolean(actionLoading) || !activeRootWritable || !selectedPaths.length}>
-                <Icon name={action.icon} fallback={false} />
+                <Icon name={action.icon} />
                 <span>{actionLoading === action.key ? `${t(action.labelKey)}...` : t(action.labelKey)}</span>
               </button>
             ))}

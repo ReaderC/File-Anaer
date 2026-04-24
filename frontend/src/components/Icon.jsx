@@ -468,10 +468,10 @@ function iconPaths(name) {
   }
 }
 
-export default function Icon({ name, className = "", title = "", fallback = true }) {
+export default function Icon({ name, className = "", title = "" }) {
   const paths = iconPaths(name);
   if (!paths) {
-    return fallback ? <span className={`material-symbols-outlined ${className}`.trim()}>{name}</span> : null;
+    return null;
   }
 
   return (

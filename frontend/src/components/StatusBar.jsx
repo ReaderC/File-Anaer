@@ -1,6 +1,6 @@
 import { useI18n } from "../lib/i18n.jsx";
 
-const APP_VERSION = "0.1.0";
+const APP_VERSION = "0.1.1";
 
 export default function StatusBar({ health }) {
   const { t } = useI18n();

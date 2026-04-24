@@ -67,7 +67,7 @@ function renderCell(key, value, row, customRender) {
     return (
       <div className="file-cell">
         <div className={`file-icon tone-${meta.tone}`}>
-          <Icon name={meta.icon} className="file-icon-glyph" fallback={false} />
+          <Icon name={meta.icon} className="file-icon-glyph" />
         </div>
         <div className="file-copy">
           <div className="file-title" title={row.name}>

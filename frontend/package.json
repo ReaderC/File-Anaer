@@ -1,7 +1,7 @@
 {
   "name": "file-anaer-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/material-symbols-outlined": "^5.2.42",
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.2",
     "react": "^19.1.0",

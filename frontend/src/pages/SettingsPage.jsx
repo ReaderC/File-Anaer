@@ -628,7 +628,7 @@ function pickerTitleForTarget(target, locale) {
 function IgnoreRow({ icon, value, onRemove }) {
   return (
     <div className="settings-chip-row">
-      <Icon name={icon} fallback={false} />
+      <Icon name={icon} />
       <span>{value}</span>
       <button type="button" className="settings-inline-button" onClick={onRemove} aria-label="Remove">
         ×

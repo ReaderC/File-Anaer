@@ -62,7 +62,7 @@ function DuplicateGroupCard({
     <article className={`duplicates-group-shell ${openGroupMenuHash === group.hash ? "is-menu-open" : ""}`}>
       <div className="duplicates-group-header">
         <div className="duplicates-group-copy">
-          <div className={`duplicates-group-icon tone-${meta.tone}`}><Icon name={meta.icon} fallback={false} /></div>
+          <div className={`duplicates-group-icon tone-${meta.tone}`}><Icon name={meta.icon} /></div>
           <div>
             <h3>{primaryFile?.name || group.hash}</h3>
             <div className="duplicates-group-meta"><span>{group.fileCount} {t("duplicates.filesPerGroup")}</span><span className="duplicates-summary-sep">·</span><span>{t("duplicates.eachSize", { size: formatBytes(group.sizeBytes) })}</span></div>

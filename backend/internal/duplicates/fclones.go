@@ -139,7 +139,7 @@ func (s Service) executeDelete(req domain.DuplicateActionRequest, root string) (
 
 		groupDeleted := 0
 		for _, path := range selectedPaths {
-			info, err := os.Stat(path)
+			info, err := statDuplicatePath(path)
 			if err != nil || info.IsDir() {
 				issues = append(issues, fmt.Sprintf("副本文件不存在或已变化: %s", path))
 				continue
@@ -203,7 +203,7 @@ func (s Service) executeRename(req domain.DuplicateActionRequest, root string) (
 			issues = append(issues, fmt.Sprintf("保留文件超出扫描范围: %s", keepPath))
 			continue
 		}
-		keepInfo, err := os.Stat(keepPath)
+		keepInfo, err := statDuplicatePath(keepPath)
 		if err != nil || keepInfo.IsDir() {
 			issues = append(issues, fmt.Sprintf("保留文件不可用: %s", keepPath))
 			continue
@@ -227,7 +227,7 @@ func (s Service) executeRename(req domain.DuplicateActionRequest, root string) (
 		reservedTargets := make(map[string]struct{}, len(targetPaths))
 		groupRenamed := 0
 		for _, path := range targetPaths {
-			info, err := os.Stat(path)
+			info, err := statDuplicatePath(path)
 			if err != nil || info.IsDir() {
 				issues = append(issues, fmt.Sprintf("待重命名文件不存在或已变化: %s", path))
 				continue
@@ -250,11 +250,13 @@ func (s Service) executeRename(req domain.DuplicateActionRequest, root string) (
 				reservedTargets[filepath.Clean(targetPath)] = struct{}{}
 				continue
 			}
-			if statErr := os.Rename(path, targetPath); statErr != nil {
-				issues = append(issues, fmt.Sprintf("重命名失败: %s -> %s", path, targetPath))
-				continue
-			}
+			if !req.DryRun {
+				if statErr := os.Rename(path, targetPath); statErr != nil {
+					issues = append(issues, fmt.Sprintf("重命名失败: %s -> %s", path, targetPath))
+					continue
+				}
 
+			}
 			affectedPaths = append(affectedPaths, targetPath)
 			reservedTargets[filepath.Clean(targetPath)] = struct{}{}
 			renamedFiles = append(renamedFiles, domain.DuplicateRenamedFile{
@@ -305,7 +307,7 @@ func (s Service) UndoRename(req domain.DuplicateUndoRenameRequest, root string) 
 			issues = append(issues, fmt.Sprintf("回滚目标已存在: %s", oldPath))
 			continue
 		}
-		info, err := os.Stat(newPath)
+		info, err := statDuplicatePath(newPath)
 		if err != nil || info.IsDir() {
 			issues = append(issues, fmt.Sprintf("待回滚文件不存在或已变化: %s", newPath))
 			continue
@@ -486,7 +488,7 @@ func (s Service) buildActionReport(req domain.DuplicateActionRequest, root strin
 
 		if req.Mode != domain.DuplicateActionDelete {
 			var err error
-			keepInfo, err = os.Stat(keepPath)
+			keepInfo, err = statDuplicatePath(keepPath)
 			if err != nil || keepInfo.IsDir() {
 				issues = append(issues, fmt.Sprintf("保留文件不可用: %s", keepPath))
 				continue
@@ -499,7 +501,7 @@ func (s Service) buildActionReport(req domain.DuplicateActionRequest, root strin
 
 		validPaths := make([]string, 0, len(selectedPaths))
 		for _, path := range selectedPaths {
-			info, err := os.Stat(path)
+			info, err := statDuplicatePath(path)
 			if err != nil || info.IsDir() {
 				issues = append(issues, fmt.Sprintf("副本文件不存在或已变化: %s", path))
 				continue
@@ -562,7 +564,7 @@ func dedupeStrings(items []string) []string {
 	result := make([]string, 0, len(items))
 	seen := make(map[string]struct{}, len(items))
 	for _, item := range items {
-		value := strings.TrimSpace(item)
+		value := filepath.Clean(strings.TrimSpace(item))
 		if value == "" {
 			continue
 		}
@@ -573,6 +575,22 @@ func dedupeStrings(items []string) []string {
 		result = append(result, value)
 	}
 	return result
+}
+
+func statDuplicatePath(path string) (os.FileInfo, error) {
+	cleaned := filepath.Clean(strings.TrimSpace(path))
+	if cleaned == "" {
+		return nil, os.ErrNotExist
+	}
+	info, err := os.Stat(cleaned)
+	if err == nil {
+		return info, nil
+	}
+	fallback, fallbackErr := os.Lstat(cleaned)
+	if fallbackErr == nil {
+		return fallback, nil
+	}
+	return nil, err
 }
 
 func containsPath(items []string, candidate string) bool {

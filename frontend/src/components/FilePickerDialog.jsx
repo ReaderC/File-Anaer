@@ -252,7 +252,7 @@ export default function FilePickerDialog({
                       onConfirm(item.path);
                     }}
                   >
-                    <Icon name={meta.icon} className={`file-picker-row-icon tone-${meta.tone}`} fallback={false} />
+                    <Icon name={meta.icon} className={`file-picker-row-icon tone-${meta.tone}`} />
                     <span className="file-picker-row-copy">
                       <strong>{item.label}</strong>
                       <small title={item.meta}>{item.meta}</small>
