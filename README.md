@@ -9,6 +9,10 @@
 
 项目默认通过 Docker 部署，后端使用 Go，前端使用 React + Vite。
 
+## 友链
+
+- [LINUX DO](https://linux.do)
+
 ## 功能概览
 
 ### 磁盘分析
