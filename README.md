@@ -131,26 +131,6 @@ Docker 镜像内也会一并包含这些文件，路径为 `/app/licenses/`。
 
 ## 快速开始
 
-### Docker Compose
-
-先复制环境变量模板：
-
-```bash
-cp .env.example .env
-```
-
-按你的实际目录修改 `.env` 和 `docker-compose.yml` 中的挂载路径，然后启动：
-
-```bash
-docker compose up -d --build
-```
-
-默认访问地址：
-
-```text
-http://<你的主机>:8080
-```
-
 ### 从 Docker Hub 拉取镜像部署
 
 推荐：
@@ -235,6 +215,44 @@ docker compose up -d
 
 - 浏览器打开 `http://<你的主机>:18001`
 - 如果未预设管理员账号，会先进入初始化页面
+
+### 从源码仓库部署
+
+这一段适合以下场景：
+
+- 你准备自己修改配置文件后再部署
+- 你希望直接使用仓库里的 `.env.example`、`docker-compose.yml`、`Dockerfile`
+- 你准备自己构建镜像，而不是直接拉取 Docker Hub 镜像
+
+先把项目仓库拉到本地：
+
+```bash
+git clone https://github.com/ReaderC/File-Anaer.git
+cd File-Anaer
+```
+
+如果你使用仓库内置的 Docker Compose 模板部署，再复制环境变量模板：
+
+```bash
+cp .env.example .env
+```
+
+然后按你的实际目录修改：
+
+- `.env`
+- `docker-compose.yml`
+
+修改完成后启动：
+
+```bash
+docker compose up -d --build
+```
+
+默认访问地址：
+
+```text
+http://<你的主机>:8080
+```
 
 ### 直接运行镜像
 
