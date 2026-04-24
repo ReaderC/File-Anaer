@@ -9,7 +9,7 @@
 
 项目默认通过 Docker 部署，后端使用 Go，前端使用 React + Vite。
 
-## 友链
+## 已链接认可 LINUX DO 社区
 
 - [LINUX DO](https://linux.do)
 
